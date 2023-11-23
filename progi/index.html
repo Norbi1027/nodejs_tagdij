@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>node.js cucc</title>
+    <link href="https://getbootstrap.com/docs/5.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <h1 class="text-danger text-center"><b>Tagok listája</b></h1>
+        <div class="mt-3 mb-3">
+            <div class="card">
+                <div class="card-header">táblázat</div>
+                <div class="card-body">
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>azon</th>
+                                <th>nev</th>
+                                <th>szulev</th>
+                                <th>irszam</th>
+                                <th>orsz</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+
+    const results_body = document.querySelector('#results');
+
+    load_data();
+
+    function load_data()
+    {
+        const request = new XMLHttpRequest();
+
+        request.open(`get`, `/get_data`);
+
+        let html = '';
+
+        request.onreadystatechange = () => {
+            if(request.readyState === XMLHttpRequest.DONE && request.status === 200)
+            {
+                const results = JSON.parse(request.responseText);
+
+                results.forEach(result => {
+                    html += `
+                    <tr>
+                        <td>`+result.azon+`</td>
+                        <td contenteditable onblur="update_data(this, 'nev', '`+result.azon+`')">`+result.nev+`</td>
+                        <td contenteditable onblur="update_data(this, 'szulev', '`+result.azon+`')">`+result.szulev+`</td>
+                        <td contenteditable onblur="update_data(this, 'irszam', '`+result.azon+`')">`+result.irszam+`</td>
+                        <td contenteditable onblur="update_data(this, 'orsz', '`+result.azon+`')">`+result.orsz+`</td>
+                        <td><button type="button" class="btn btn-danger btn-sm" onclick="delete_data(`+result.azon+`)">Remove</button></td>
+                    </tr>
+                    `;
+                });
+
+                html += `
+                <tr>
+                    <td></td>
+                    <td contenteditable id="nev_data"></td>
+                    <td contenteditable id="szulev_data"></td>
+                    <td contenteditable id="irszam_data"></td>
+                    <td contenteditable id="orsz_data"></td>
+                    <td><button type="button" class="btn btn-success btn-sm" onclick="add_data()">Add</button></td>
+                </tr>
+                `;
+
+                results_body.innerHTML = html;
+            }
+        };
+
+        request.send();
+    }
+
+    function add_data()
+    {
+        const nev = document.getElementById('nev_data');
+
+        const szulev = document.getElementById('szulev_data');
+
+        const irszam = document.getElementById('irszam_data');
+
+        const orsz = document.getElementById('orsz_data');
+
+        const param = `nev=`+nev.innerText+`&szulev=`+szulev.innerText+`&irszam=`+irszam.innerText+`orsz=`+orsz.innerText+'';
+
+        const request = new XMLHttpRequest();
+
+        request.open(`POST`, `/add_data`, true);
+
+        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        request.onreadystatechange = () => {
+
+            if(request.readyState === XMLHttpRequest.DONE && request.status === 200)
+            {
+                alert("Hozzáadva!");
+
+                load_data();
+            }
+
+        };
+
+        request.send(param);
+    }
+
+    function update_data(element, variable_name, azon)
+    {
+        const param = `variable_name=`+variable_name+`&variable_value=`+element.innerText+`&azon=`+azon+``;
+
+        const request = new XMLHttpRequest();
+
+        request.open(`POST`, `/update_data`, true);
+
+        //Send the proper header information along with the request
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        request.onreadystatechange = () => {
+
+            if(request.readyState === XMLHttpRequest.DONE && request.status === 200)
+            {
+
+                alert('Frissitve!');
+
+            }
+
+        };
+
+        request.send(param);
+    }
+
+    function delete_data(azon)
+    {
+        if(confirm("Biztos hogy ki akarod törölni?"))
+        {
+            const param = `azon=`+azon+``;
+
+            const request = new XMLHttpRequest();
+
+            request.open('POST', `/delete_data`, true);
+
+            request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+            request.onreadystatechange = () => {
+
+                if(request.readyState === XMLHttpRequest.DONE && request.status === 200)
+                {
+                    alert('Törölve!');
+
+                    load_data();
+                }
+
+            };
+
+            request.send(param);
+        }
+    }
+
+</script>
